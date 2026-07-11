@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+export type View = 'home' | 'instances' | 'mods' | 'store' | 'settings';
+
 interface DownloadProgress {
   percentage: number;
   speed: string;
@@ -7,6 +9,9 @@ interface DownloadProgress {
 }
 
 interface LauncherState {
+  activeView: View;
+  setActiveView: (view: View) => void;
+  
   downloadedVersions: string[];
   isDownloading: boolean;
   downloadProgress: DownloadProgress | null;
@@ -16,6 +21,9 @@ interface LauncherState {
 }
 
 export const useLauncherStore = create<LauncherState>((set) => ({
+  activeView: 'home',
+  setActiveView: (activeView) => set({ activeView }),
+  
   downloadedVersions: ['1.21.5'],
   isDownloading: false,
   downloadProgress: null,
