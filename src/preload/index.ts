@@ -4,7 +4,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 // Custom APIs for renderer
 const api = {
   getSettings: () => ipcRenderer.invoke('get-settings'),
-  setSettings: (settings) => ipcRenderer.invoke('set-settings', settings)
+  setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
+  launchGame: (data) => ipcRenderer.invoke('launch-game', data)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

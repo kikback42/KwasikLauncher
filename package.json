@@ -28,6 +28,7 @@
     "electron-updater": "^6.3.9",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.24.0",
+    "minecraft-launcher-core": "^3.18.2",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {

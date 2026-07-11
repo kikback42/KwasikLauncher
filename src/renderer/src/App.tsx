@@ -1,34 +1,30 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { useState } from 'react'
 
-function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+function App() {
+  const [username, setUsername] = useState('Player')
+  const [version] = useState('1.20.1')
+
+  const launch = async () => {
+    // @ts-ignore
+    await window.api.launchGame({ username, version })
+  }
 
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </>
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
+      <h1 className="text-4xl font-bold mb-8 text-cyan-400">KwasikLauncher</h1>
+      <input
+        className="mb-4 p-2 bg-gray-800 rounded border border-gray-700 text-white"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        placeholder="Username"
+      />
+      <button
+        className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 rounded font-bold"
+        onClick={launch}
+      >
+        Играть
+      </button>
+    </div>
   )
 }
 
