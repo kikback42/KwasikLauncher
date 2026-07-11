@@ -1,0 +1,12 @@
+node_modules
+dist
+out
+.electron-cache
+.eslintcache
+*.log
+.env
+.env.*
+!.env.example
+.vscode
+.idea
+build
