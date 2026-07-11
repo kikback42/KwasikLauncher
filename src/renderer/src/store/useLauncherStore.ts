@@ -8,14 +8,24 @@ interface DownloadProgress {
   eta: string;
 }
 
+interface AppSettings {
+  ram: number;
+  theme: string;
+  language: string;
+}
+
 interface LauncherState {
   activeView: View;
   setActiveView: (view: View) => void;
   
   downloadedVersions: string[];
+  installedMods: string[];
   isDownloading: boolean;
   downloadProgress: DownloadProgress | null;
   
+  settings: AppSettings;
+  updateSetting: (key: keyof AppSettings, value: any) => void;
+
   startDownload: (version: string) => void;
   finishDownload: (version: string) => void;
 }
@@ -25,13 +35,20 @@ export const useLauncherStore = create<LauncherState>((set) => ({
   setActiveView: (activeView) => set({ activeView }),
   
   downloadedVersions: ['1.21.5'],
+  installedMods: [],
   isDownloading: false,
   downloadProgress: null,
+  
+  settings: {
+    ram: 4096,
+    theme: 'dark-neon',
+    language: 'ru',
+  },
+  updateSetting: (key, value) => set((state) => ({ settings: { ...state.settings, [key]: value } })),
 
   startDownload: (version) => {
     set({ isDownloading: true, downloadProgress: { percentage: 0, speed: '0 MB/s', eta: '--' } });
     
-    // Simulate download
     let progress = 0;
     const interval = setInterval(() => {
       progress += 5;
@@ -51,7 +68,7 @@ export const useLauncherStore = create<LauncherState>((set) => ({
           },
         });
       }
-    }, 500);
+    }, 300);
   },
 
   finishDownload: (version) => set((state) => ({
