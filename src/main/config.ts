@@ -1,4 +1,5 @@
-import Store from 'electron-store';
+// @ts-ignore
+const Store = require('electron-store');
 
 export interface AppSettings {
   theme: 'dark-neon' | 'cyberpunk' | 'minimal' | 'custom';
@@ -26,4 +27,5 @@ const schema: any = {
   },
 };
 
-export const store = new Store<AppSettings>({ schema });
+// @ts-ignore
+export const store = new (Store.default || Store)({ schema });
