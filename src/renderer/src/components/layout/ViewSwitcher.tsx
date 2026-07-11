@@ -2,6 +2,7 @@ import { useLauncherStore } from '../../store/useLauncherStore';
 import { MainDashboard } from '../dashboard/MainDashboard';
 import { ModStoreView } from '../dashboard/ModStoreView';
 import { SettingsView } from '../dashboard/SettingsView';
+import { InstancesView } from '../dashboard/InstancesView';
 
 export const ViewSwitcher = () => {
   const { activeView } = useLauncherStore();
@@ -9,6 +10,8 @@ export const ViewSwitcher = () => {
   switch (activeView) {
     case 'home':
       return <MainDashboard onLaunch={() => {}} />;
+    case 'instances':
+      return <InstancesView />;
     case 'store':
       return <ModStoreView />;
     case 'settings':

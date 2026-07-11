@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { fetchVersions, Version } from '../services/versionService';
 
 export type View = 'home' | 'instances' | 'mods' | 'store' | 'settings';
 
@@ -18,6 +19,10 @@ interface LauncherState {
   activeView: View;
   setActiveView: (view: View) => void;
   
+  versions: Version[];
+  isLoadingVersions: boolean;
+  loadVersions: () => Promise<void>;
+  
   downloadedVersions: string[];
   installedMods: string[];
   isDownloading: boolean;
@@ -33,6 +38,14 @@ interface LauncherState {
 export const useLauncherStore = create<LauncherState>((set) => ({
   activeView: 'home',
   setActiveView: (activeView) => set({ activeView }),
+  
+  versions: [],
+  isLoadingVersions: false,
+  loadVersions: async () => {
+    set({ isLoadingVersions: true });
+    const versions = await fetchVersions();
+    set({ versions, isLoadingVersions: false });
+  },
   
   downloadedVersions: ['1.21.5'],
   installedMods: [],
