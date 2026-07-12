@@ -35,4 +35,13 @@ npm run dev
 npm run build:win
 ```
 
-Installer output: `dist/KwasikLauncher-1.1.0-Setup.exe`
+Installer output: `dist/KwasikLauncher-2.0.0-Setup.exe`
+
+### CFG profiles (v2)
+
+Export your theme and settings to a `.cfg` file, or import someone else's profile:
+
+1. Open **Settings**
+2. Click **Import from CFG** or **Export to CFG**
+
+Example profile: `resources/example.kwasik.cfg`

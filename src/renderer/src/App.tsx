@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, Box, Download, Gamepad2, ImageIcon, RefreshCw, Settings, ShieldCheck, Sparkles, Trash2, TriangleAlert, Wifi } from 'lucide-react'
+import { Activity, Box, Download, FileDown, FileUp, Gamepad2, ImageIcon, RefreshCw, Settings, ShieldCheck, Sparkles, Star, Trash2, TriangleAlert, Wifi } from 'lucide-react'
 
 type Tab = 'home' | 'versions' | 'mods' | 'settings'
 type Check = { id: string; title: string; state: 'ok' | 'warning' | 'error'; message: string; solution?: string }
 type Version = { id: string; type: string; releaseTime: string; recommendedJava?: number }
-type Mod = { projectId: string; version: string; title: string; description: string; downloads: number; iconUrl?: string }
 
 const nav: Array<{ id: Tab; label: string; icon: typeof Gamepad2 }> = [
   { id: 'home', label: 'Главная', icon: Gamepad2 },
@@ -57,7 +56,9 @@ function App() {
   const [progress, setProgress] = useState(0)
   const [speed, setSpeed] = useState('')
   const [modQuery, setModQuery] = useState('sodium')
-  const [mods, setMods] = useState<Mod[]>([])
+  const [mods, setMods] = useState<ModCard[]>([])
+  const [recommendedMods, setRecommendedMods] = useState<ModCard[]>([])
+  const [expandedMod, setExpandedMod] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [settings, setSettings] = useState<AppSettings>(defaultSettings)
   const [minecraftPath, setMinecraftPath] = useState('')
@@ -167,6 +168,19 @@ function App() {
     }
   }
 
+  const loadRecommendations = async () => {
+    try {
+      const list = await window.api.getRecommendedMods(version)
+      setRecommendedMods(list)
+    } catch {
+      setStatus('Не удалось загрузить рекомендации модов.')
+    }
+  }
+
+  useEffect(() => {
+    if (tab === 'mods') void loadRecommendations()
+  }, [tab, version])
+
   const searchMods = async () => {
     setBusy(true)
     try {
@@ -180,7 +194,7 @@ function App() {
     }
   }
 
-  const installMod = async (mod: Mod) => {
+  const installMod = async (mod: ModCard) => {
     setBusy(true)
     const result = await window.api.installMod(mod)
     setStatus(result.message)
@@ -309,29 +323,33 @@ function App() {
         )}
         {tab === 'mods' && (
           <section>
-            <Header title="Mod Store" />
-            <p className="sub">Каталог Modrinth · файлы устанавливаются в папку mods.</p>
+            <Header title="Mod Store" action={<button className="ghost" onClick={() => void loadRecommendations()}><RefreshCw size={16} />Обновить</button>} />
+            <p className="sub">Каталог Modrinth · рекомендации, описания и скриншоты модов.</p>
+
+            <h3 className="mod-section-title"><Star size={16} /> Рекомендуемые моды</h3>
+            <div className="mod-grid mod-grid-rich">
+              {recommendedMods.map((mod) => (
+                <ModCardView key={`rec-${mod.projectId}`} mod={mod} busy={busy} expanded={expandedMod === mod.projectId} onToggle={() => setExpandedMod(expandedMod === mod.projectId ? null : mod.projectId)} onInstall={() => void installMod(mod)} />
+              ))}
+            </div>
+
+            <h3 className="mod-section-title">Поиск</h3>
             <div className="search">
               <input value={modQuery} onChange={(event) => setModQuery(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && void searchMods()} placeholder="Найти мод…" />
               <button onClick={() => void searchMods()} disabled={busy}>
                 <Download size={16} />Искать
               </button>
             </div>
-            <div className="mod-grid">
-              {mods.map((mod) => (
-                <article className="mod-card" key={mod.projectId}>
-                  {mod.iconUrl && <img src={mod.iconUrl} alt="" />}
-                  <div>
-                    <b>{mod.title}</b>
-                    <small>{mod.downloads.toLocaleString('ru-RU')} загрузок</small>
-                  </div>
-                  <p>{mod.description}</p>
-                  <button onClick={() => void installMod(mod)} disabled={busy}>
-                    Установить
-                  </button>
-                </article>
-              ))}
-            </div>
+            {mods.length > 0 && (
+              <>
+                <h3 className="mod-section-title">Результаты поиска</h3>
+                <div className="mod-grid mod-grid-rich">
+                  {mods.map((mod) => (
+                    <ModCardView key={mod.projectId} mod={mod} busy={busy} expanded={expandedMod === mod.projectId} onToggle={() => setExpandedMod(expandedMod === mod.projectId ? null : mod.projectId)} onInstall={() => void installMod(mod)} />
+                  ))}
+                </div>
+              </>
+            )}
           </section>
         )}
         {tab === 'settings' && (
@@ -374,6 +392,26 @@ function App() {
               </article>
 
               <article className="settings-card">
+                <h3>CFG профиль</h3>
+                <p className="hint">Импортируй или экспортируй все настройки в файл .cfg — удобно делиться темой с друзьями.</p>
+                <div className="bg-actions">
+                  <button className="ghost" onClick={async () => {
+                    const result = await window.api.importSettingsCfg()
+                    setStatus(result.message)
+                    if (result.success && result.settings) { setSettings(result.settings); applySettings(result.settings) }
+                  }}>
+                    <FileUp size={16} /> Импорт из CFG
+                  </button>
+                  <button className="ghost" onClick={async () => {
+                    const result = await window.api.exportSettingsCfg()
+                    setStatus(result.message)
+                  }}>
+                    <FileDown size={16} /> Экспорт в CFG
+                  </button>
+                </div>
+              </article>
+
+              <article className="settings-card">
                 <h3>Игра</h3>
                 <label>Выделение RAM (MB)</label>
                 <input type="number" min={1024} max={16384} step={512} value={settings.ram} onChange={(e) => void saveSettings({ ram: Number(e.target.value) })} />
@@ -408,6 +446,39 @@ function App() {
     </div>
   )
 }
+
+const ModCardView = ({ mod, busy, expanded, onToggle, onInstall }: { mod: ModCard; busy: boolean; expanded: boolean; onToggle: () => void; onInstall: () => void }) => (
+  <article className={`mod-card-rich ${mod.recommended ? 'recommended' : ''}`}>
+    <div className="mod-banner" style={{ backgroundImage: mod.bannerUrl ? `url("${mod.bannerUrl}")` : undefined }}>
+      {mod.recommended && <span className="mod-badge"><Star size={12} /> Рекомендуем</span>}
+      {mod.iconUrl && <img className="mod-icon" src={mod.iconUrl} alt={mod.title} />}
+    </div>
+    <div className="mod-body">
+      <div className="mod-head">
+        <div>
+          <b>{mod.title}</b>
+          <small>{mod.author} · {mod.downloads.toLocaleString('ru-RU')} загрузок</small>
+        </div>
+        {mod.categories.length > 0 && (
+          <div className="mod-tags">{mod.categories.slice(0, 3).map((cat) => <span key={cat}>{cat}</span>)}</div>
+        )}
+      </div>
+      <p className="mod-desc">{mod.description}</p>
+      {expanded && <p className="mod-full-desc">{mod.fullDescription}</p>}
+      {mod.gallery.length > 1 && (
+        <div className="mod-gallery">
+          {mod.gallery.slice(0, 4).map((url) => (
+            <img key={url} src={url} alt="" loading="lazy" />
+          ))}
+        </div>
+      )}
+      <div className="mod-actions">
+        <button className="ghost" onClick={onToggle}>{expanded ? 'Свернуть' : 'Подробнее'}</button>
+        <button onClick={onInstall} disabled={busy}>Установить</button>
+      </div>
+    </div>
+  </article>
+)
 
 const Header = ({ title, action }: { title: string; action?: React.ReactNode }) => (
   <div className="section-head">

@@ -13,6 +13,22 @@ interface AppSettings {
   customTitle: string
 }
 
+interface ModCard {
+  projectId: string
+  slug: string
+  version: string
+  title: string
+  description: string
+  fullDescription: string
+  downloads: number
+  iconUrl: string
+  bannerUrl: string
+  gallery: string[]
+  author: string
+  categories: string[]
+  recommended: boolean
+}
+
 interface Window {
   api: {
     getSettings: () => Promise<AppSettings>
@@ -25,10 +41,13 @@ interface Window {
     getMinecraftPath: () => Promise<string>
     verifyGameFiles: () => Promise<{ success: boolean; message: string }>
     launchGame: (data: { version: string; username: string; loader?: { type: string; version: string } }) => Promise<{ success: boolean; error?: string }>
-    searchMods: (query: string, version: string) => Promise<Array<{ projectId: string; version: string; title: string; description: string; downloads: number; iconUrl?: string }>>
+    getRecommendedMods: (version: string) => Promise<ModCard[]>
+    searchMods: (query: string, version: string) => Promise<ModCard[]>
     installMod: (mod: { projectId: string; version: string; title: string }) => Promise<{ success: boolean; message: string }>
     pickBackgroundImage: () => Promise<string | null>
     clearBackgroundImage: () => Promise<AppSettings>
+    importSettingsCfg: () => Promise<{ success: boolean; message: string; settings?: AppSettings }>
+    exportSettingsCfg: () => Promise<{ success: boolean; message: string }>
     onLaunchStatus: (callback: (status: { type: 'info' | 'progress' | 'error' | 'success'; message: string; progress?: number; speed?: string; eta?: string }) => void) => () => void
   }
 }

@@ -7,6 +7,7 @@ import path from 'path'
 import { store } from './config'
 import { minecraftRoot, runDiagnostics } from './services/diagnostics'
 import { findJava } from './services/java'
+import { enrichMods, fetchRecommendedHits, searchModrinth } from './services/mods'
 import { writeLog } from './services/logger'
 
 type Status = {
@@ -199,21 +200,14 @@ export function setupLauncherHandlers(): void {
     return { success: true, message: `Установлено версий: ${installed.length}.` }
   })
 
+  ipcMain.handle('get-recommended-mods', async (_, version: string) => {
+    const hits = await fetchRecommendedHits(version)
+    return enrichMods(hits, version, true)
+  })
+
   ipcMain.handle('search-mods', async (_, input: { query: string; version: string }) => {
-    const facets = encodeURIComponent(JSON.stringify([[`versions:${input.version}`], ['project_type:mod']]))
-    const response = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(input.query)}&facets=${facets}&limit=20`)
-    if (!response.ok) throw new Error('Каталог Modrinth недоступен.')
-    const data = (await response.json()) as {
-      hits: Array<{ project_id: string; title: string; description: string; downloads: number; icon_url?: string }>
-    }
-    return data.hits.map((mod) => ({
-      projectId: mod.project_id,
-      version: input.version,
-      title: mod.title,
-      description: mod.description,
-      downloads: mod.downloads,
-      iconUrl: mod.icon_url,
-    }))
+    const hits = await searchModrinth(input.query, input.version)
+    return enrichMods(hits, input.version, false)
   })
 
   ipcMain.handle('install-mod', async (_, mod: { projectId: string; version: string; title: string }) => {
