@@ -1,34 +1,38 @@
-# kwasiklauncher
+# KwasikLauncher
 
-An Electron application with React and TypeScript
+Minecraft launcher for Windows with real version downloads, customization, and Modrinth mod store.
 
-## Recommended IDE Setup
+## Download
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+Latest release: [GitHub Releases](https://github.com/kikback42/KwasikLauncher/releases/latest)
 
-## Project Setup
+Download `KwasikLauncher-*-Setup.exe`, run the installer, and launch **KwasikLauncher** from the desktop shortcut.
 
-### Install
+## Requirements
+
+- Windows 10/11 (64-bit)
+- [Java 21](https://adoptium.net/temurin/releases/?version=21) (required for modern Minecraft versions)
+- Internet connection for downloading Minecraft and mods
+
+## Features
+
+- Official Minecraft versions from Mojang
+- Real download and install with progress
+- Full UI customization (themes, colors, background photo)
+- Modrinth mod catalog
+- System diagnostics before launch
+
+## Development
 
 ```bash
-$ npm install
+npm install
+npm run dev
 ```
 
-### Development
+## Build
 
 ```bash
-$ npm run dev
+npm run build:win
 ```
 
-### Build
-
-```bash
-# For windows
-$ npm run build:win
-
-# For macOS
-$ npm run build:mac
-
-# For Linux
-$ npm run build:linux
-```
+Installer output: `dist/KwasikLauncher-1.1.0-Setup.exe`

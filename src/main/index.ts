@@ -1,9 +1,13 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+import fs from 'fs/promises'
+import path from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { store } from './config'
+import { AppSettings, store } from './config'
 import { setupLauncherHandlers } from './launcher'
+import { autoUpdater } from 'electron-updater'
+import { writeLog } from './services/logger'
 
 function createWindow(): void {
   // Create the browser window.
@@ -54,16 +58,48 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  ipcMain.handle('get-settings', () => {
-    return store.store
+  ipcMain.handle('get-settings', () => store.store as AppSettings)
+
+  ipcMain.handle('set-settings', (_, settings: Partial<AppSettings>) => {
+    for (const [key, value] of Object.entries(settings)) {
+      store.set(key, value)
+    }
+    return store.store as AppSettings
   })
 
-  ipcMain.handle('set-settings', (_, settings) => {
-    store.set(settings)
-    return store.store
+  ipcMain.handle('pick-background-image', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Выберите фоновое изображение',
+      filters: [{ name: 'Изображения', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'] }],
+      properties: ['openFile'],
+    })
+    if (result.canceled || !result.filePaths[0]) return null
+
+    const destDir = path.join(app.getPath('userData'), 'customization')
+    await fs.mkdir(destDir, { recursive: true })
+    const ext = path.extname(result.filePaths[0]) || '.png'
+    const dest = path.join(destDir, `background${ext}`)
+    await fs.copyFile(result.filePaths[0], dest)
+    store.set('backgroundImage', dest)
+    return dest
+  })
+
+  ipcMain.handle('clear-background-image', async () => {
+    const current = store.get('backgroundImage') as string
+    if (current) {
+      await fs.unlink(current).catch(() => undefined)
+    }
+    store.set('backgroundImage', '')
+    return store.store as AppSettings
   })
 
   setupLauncherHandlers()
+
+  autoUpdater.autoDownload = false
+  autoUpdater.on('error', (error) => { void writeLog('WARN', 'Updater unavailable', String(error)) })
+  // A publish URL is configured by the release pipeline. Without one this is
+  // safely logged and does not block the launcher.
+  void autoUpdater.checkForUpdates().catch((error) => writeLog('WARN', 'Update check skipped', String(error)))
 
   createWindow()
 

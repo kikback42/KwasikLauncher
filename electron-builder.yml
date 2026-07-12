@@ -2,6 +2,7 @@ appId: com.kwasik.launcher
 productName: KwasikLauncher
 directories:
   buildResources: build
+  output: dist
 files:
   - "**/*"
   - "!**/*.{ts,tsx}"
@@ -9,13 +10,19 @@ files:
   - "!**/eslint.*"
   - "!**/prettier.*"
   - "!**/dev-app-update.yml"
+publish:
+  provider: github
+  owner: kikback42
+  repo: KwasikLauncher
 win:
   target:
     - target: nsis
       arch:
         - x64
   executableName: KwasikLauncher
+  artifactName: KwasikLauncher-${version}-Setup.${ext}
 nsis:
   oneClick: true
   perMachine: false
   createDesktopShortcut: true
+  shortcutName: KwasikLauncher

@@ -1,16 +1,29 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-// Custom APIs for renderer
 const api = {
   getSettings: () => ipcRenderer.invoke('get-settings'),
-  setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
-  launchGame: (data) => ipcRenderer.invoke('launch-game', data)
+  setSettings: (settings: Record<string, unknown>) => ipcRenderer.invoke('set-settings', settings),
+  getVersions: () => ipcRenderer.invoke('get-versions'),
+  getInstalledVersions: () => ipcRenderer.invoke('get-installed-versions'),
+  downloadVersion: (versionId: string) => ipcRenderer.invoke('download-version', versionId),
+  getLoaderVersions: (data: { type: string; gameVersion: string }) => ipcRenderer.invoke('get-loader-versions', data),
+  runDiagnostics: () => ipcRenderer.invoke('run-diagnostics'),
+  getMinecraftPath: () => ipcRenderer.invoke('get-minecraft-path'),
+  verifyGameFiles: () => ipcRenderer.invoke('verify-game-files'),
+  launchGame: (data: { version: string; username: string; loader?: { type: string; version: string } }) =>
+    ipcRenderer.invoke('launch-game', data),
+  searchMods: (query: string, version: string) => ipcRenderer.invoke('search-mods', { query, version }),
+  installMod: (mod: { projectId: string; version: string; title: string }) => ipcRenderer.invoke('install-mod', mod),
+  pickBackgroundImage: () => ipcRenderer.invoke('pick-background-image'),
+  clearBackgroundImage: () => ipcRenderer.invoke('clear-background-image'),
+  onLaunchStatus: (callback: (status: unknown) => void) => {
+    const listener = (_: Electron.IpcRendererEvent, status: unknown) => callback(status)
+    ipcRenderer.on('launcher-status', listener)
+    return () => ipcRenderer.removeListener('launcher-status', listener)
+  },
 }
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)

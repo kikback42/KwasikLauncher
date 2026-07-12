@@ -12,6 +12,7 @@ interface DownloadProgress {
 interface AppSettings {
   ram: number;
   theme: string;
+  accentColor: string;
   language: string;
 }
 
@@ -25,11 +26,16 @@ interface LauncherState {
   
   downloadedVersions: string[];
   installedMods: string[];
+  selectedVersion: string;
+  username: string;
+  setSelectedVersion: (version: string) => void;
+  setUsername: (username: string) => void;
+  addInstalledMod: (mod: string) => void;
   isDownloading: boolean;
   downloadProgress: DownloadProgress | null;
   
   settings: AppSettings;
-  updateSetting: (key: keyof AppSettings, value: any) => void;
+  updateSetting: (newSettings: Partial<AppSettings>) => void;
 
   startDownload: (version: string) => void;
   finishDownload: (version: string) => void;
@@ -47,17 +53,23 @@ export const useLauncherStore = create<LauncherState>((set) => ({
     set({ versions, isLoadingVersions: false });
   },
   
-  downloadedVersions: ['1.21.5'],
+  downloadedVersions: [],
   installedMods: [],
+  selectedVersion: '1.21.5',
+  username: 'Player',
+  setSelectedVersion: (selectedVersion) => set({ selectedVersion }),
+  setUsername: (username) => set({ username }),
+  addInstalledMod: (mod) => set((state) => ({ installedMods: [...state.installedMods, mod] })),
   isDownloading: false,
   downloadProgress: null,
   
   settings: {
     ram: 4096,
     theme: 'dark-neon',
+    accentColor: '#06b6d4',
     language: 'ru',
   },
-  updateSetting: (key, value) => set((state) => ({ settings: { ...state.settings, [key]: value } })),
+  updateSetting: (newSettings) => set((state) => ({ settings: { ...state.settings, ...newSettings } })),
 
   startDownload: (version) => {
     set({ isDownloading: true, downloadProgress: { percentage: 0, speed: '0 MB/s', eta: '--' } });
