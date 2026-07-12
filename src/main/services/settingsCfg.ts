@@ -51,7 +51,7 @@ const DEFAULT_KEYS: Record<keyof AppSettings, true> = {
 
 export const serializeSettingsCfg = (settings: AppSettings, relativeBackground?: string): string => {
   const bg = relativeBackground ?? settings.backgroundImage
-  return `; KwasikLauncher Settings v2
+  return `; KwasikLauncher Settings
 ; Импорт: Настройки -> Импорт из CFG
 
 [appearance]
