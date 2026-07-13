@@ -35,7 +35,7 @@ npm run dev
 npm run build:win
 ```
 
-Installer output: `dist/KwasikLauncher-1.2.0-Setup.exe`
+Installer output: `dist/KwasikLauncher-1.3.0-Setup.exe`
 
 ### CFG profiles
 

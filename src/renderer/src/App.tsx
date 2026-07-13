@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, Box, Download, FileDown, FileUp, Gamepad2, ImageIcon, RefreshCw, Settings, ShieldCheck, Sparkles, Star, Trash2, TriangleAlert, Wifi } from 'lucide-react'
+import { Activity, Bot, Box, Download, FileDown, FileUp, Gamepad2, ImageIcon, RefreshCw, Send, Settings, ShieldCheck, Sparkles, Star, Trash2, TriangleAlert, Wifi } from 'lucide-react'
 
-type Tab = 'home' | 'versions' | 'mods' | 'settings'
+type Tab = 'home' | 'versions' | 'mods' | 'helper' | 'settings'
 type Check = { id: string; title: string; state: 'ok' | 'warning' | 'error'; message: string; solution?: string }
 type Version = { id: string; type: string; releaseTime: string; recommendedJava?: number }
 
@@ -9,6 +9,7 @@ const nav: Array<{ id: Tab; label: string; icon: typeof Gamepad2 }> = [
   { id: 'home', label: 'Главная', icon: Gamepad2 },
   { id: 'versions', label: 'Версии', icon: Box },
   { id: 'mods', label: 'Mod Store', icon: Sparkles },
+  { id: 'helper', label: 'Помощник', icon: Bot },
   { id: 'settings', label: 'Настройки', icon: Settings },
 ]
 
@@ -29,6 +30,9 @@ const defaultSettings: AppSettings = {
   backgroundBlur: 8,
   backgroundOpacity: 0.55,
   customTitle: 'KWASIK LAUNCHER',
+  aiBaseUrl: 'https://api.openai.com/v1',
+  aiApiKey: '',
+  aiModel: 'gpt-4o-mini',
 }
 
 const toFileUrl = (filePath: string): string => `file:///${filePath.replace(/\\/g, '/')}`
@@ -62,6 +66,10 @@ function App() {
   const [busy, setBusy] = useState(false)
   const [settings, setSettings] = useState<AppSettings>(defaultSettings)
   const [minecraftPath, setMinecraftPath] = useState('')
+
+  const [aiMessages, setAiMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
+  const [aiInput, setAiInput] = useState('')
+  const [aiBusy, setAiBusy] = useState(false)
 
   const [loaderType, setLoaderType] = useState('vanilla')
   const [loaderVersion, setLoaderVersion] = useState('')
@@ -201,6 +209,27 @@ function App() {
     setBusy(false)
   }
 
+  const askAi = async (text: string) => {
+    const content = text.trim()
+    if (!content || aiBusy) return
+    const next = [...aiMessages, { role: 'user' as const, content }]
+    setAiMessages(next)
+    setAiInput('')
+    setAiBusy(true)
+    try {
+      const result = await window.api.aiChat(next)
+      if (result.ok && result.text) {
+        setAiMessages([...next, { role: 'assistant', content: result.text }])
+      } else {
+        setAiMessages([...next, { role: 'assistant', content: result.error ?? 'Нет ответа от помощника.' }])
+      }
+    } catch {
+      setAiMessages([...next, { role: 'assistant', content: 'Не удалось связаться с помощником.' }])
+    } finally {
+      setAiBusy(false)
+    }
+  }
+
   const selectedJava = useMemo(() => versions.find((item) => item.id === version)?.recommendedJava ?? 21, [versions, version])
   const title = settings.customTitle || 'KWASIK LAUNCHER'
 
@@ -270,7 +299,9 @@ function App() {
                 <select value={loaderType} onChange={(e) => setLoaderType(e.target.value)}>
                   <option value="vanilla">Vanilla</option>
                   <option value="fabric">Fabric</option>
+                  <option value="forge">Forge</option>
                   <option value="quilt">Quilt</option>
+                  <option value="neoforge">NeoForge</option>
                 </select>
               </div>
               {loaderType !== 'vanilla' && (
@@ -352,6 +383,36 @@ function App() {
             )}
           </section>
         )}
+        {tab === 'helper' && (
+          <section>
+            <Header title="AI Помощник" action={!settings.aiApiKey ? <span className="hint">Локальный режим · добавьте ключ в Настройках для нейросети</span> : <span className="hint">Нейросеть: {settings.aiModel}</span>} />
+            <p className="sub">Задайте вопрос про Minecraft, моды, ядра или настройки запуска. Чат идёт через main-процесс, поэтому лаунчер остаётся лёгким для ОЗУ.</p>
+
+            <div className="ai-quick">
+              {['Как установить Forge?', 'Сколько выделить ОЗУ?', 'Игра не запускается', 'Как установить мод?'].map((q) => (
+                <button key={q} className="ghost" onClick={() => void askAi(q)} disabled={aiBusy}>{q}</button>
+              ))}
+            </div>
+
+            <div className="ai-chat">
+              {aiMessages.length === 0 && <p className="ai-empty">Привет! Я помощник KwasikLauncher. Чем помочь?</p>}
+              {aiMessages.map((message, index) => (
+                <div key={index} className={`ai-msg ${message.role}`}>
+                  <b>{message.role === 'user' ? 'Вы' : 'Помощник'}</b>
+                  <p>{message.content}</p>
+                </div>
+              ))}
+              {aiBusy && <div className="ai-msg assistant"><b>Помощник</b><p>Думаю…</p></div>}
+            </div>
+
+            <div className="search">
+              <input value={aiInput} onChange={(event) => setAiInput(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && void askAi(aiInput)} placeholder="Спросите помощника…" />
+              <button onClick={() => void askAi(aiInput)} disabled={aiBusy}>
+                <Send size={16} />Спросить
+              </button>
+            </div>
+          </section>
+        )}
         {tab === 'settings' && (
           <section>
             <Header title="Настройки и кастомизация" action={<button className="ghost" onClick={() => void runChecks()}><Activity size={16} />Проверить</button>} />
@@ -418,6 +479,17 @@ function App() {
                 <label>Папка Minecraft</label>
                 <input value={minecraftPath} readOnly />
                 <small className="hint">Версии, библиотеки и моды хранятся здесь.</small>
+              </article>
+
+              <article className="settings-card">
+                <h3>AI Помощник</h3>
+                <p className="hint">Подключите нейросеть (OpenAI-совместимый API). Ключ хранится локально. Без ключа работает локальный советчик — без расхода ОЗУ.</p>
+                <label>Базовый URL API</label>
+                <input value={settings.aiBaseUrl} onChange={(e) => void saveSettings({ aiBaseUrl: e.target.value })} placeholder="https://api.openai.com/v1" />
+                <label>Модель</label>
+                <input value={settings.aiModel} onChange={(e) => void saveSettings({ aiModel: e.target.value })} placeholder="gpt-4o-mini" />
+                <label>API-ключ</label>
+                <input type="password" value={settings.aiApiKey} onChange={(e) => void saveSettings({ aiApiKey: e.target.value })} placeholder="sk-..." />
               </article>
             </div>
 

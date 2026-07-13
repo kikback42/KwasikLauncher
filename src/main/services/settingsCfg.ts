@@ -47,6 +47,9 @@ const DEFAULT_KEYS: Record<keyof AppSettings, true> = {
   backgroundBlur: true,
   backgroundOpacity: true,
   customTitle: true,
+  aiBaseUrl: true,
+  aiApiKey: true,
+  aiModel: true,
 }
 
 export const serializeSettingsCfg = (settings: AppSettings, relativeBackground?: string): string => {

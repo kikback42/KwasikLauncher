@@ -16,6 +16,7 @@ const api = {
   getRecommendedMods: (version: string) => ipcRenderer.invoke('get-recommended-mods', version),
   searchMods: (query: string, version: string) => ipcRenderer.invoke('search-mods', { query, version }),
   installMod: (mod: { projectId: string; version: string; title: string }) => ipcRenderer.invoke('install-mod', mod),
+  aiChat: (messages: Array<{ role: string; content: string }>) => ipcRenderer.invoke('ai-chat', { messages }),
   pickBackgroundImage: () => ipcRenderer.invoke('pick-background-image'),
   clearBackgroundImage: () => ipcRenderer.invoke('clear-background-image'),
   importSettingsCfg: () => ipcRenderer.invoke('import-settings-cfg'),

@@ -11,6 +11,9 @@ export interface AppSettings {
   backgroundBlur: number
   backgroundOpacity: number
   customTitle: string
+  aiBaseUrl: string
+  aiApiKey: string
+  aiModel: string
 }
 
 const schema: Record<string, { type: string; default: unknown }> = {
@@ -23,6 +26,9 @@ const schema: Record<string, { type: string; default: unknown }> = {
   backgroundBlur: { type: 'number', default: 8 },
   backgroundOpacity: { type: 'number', default: 0.55 },
   customTitle: { type: 'string', default: 'KWASIK LAUNCHER' },
+  aiBaseUrl: { type: 'string', default: 'https://api.openai.com/v1' },
+  aiApiKey: { type: 'string', default: '' },
+  aiModel: { type: 'string', default: 'gpt-4o-mini' },
 }
 
 // @ts-ignore

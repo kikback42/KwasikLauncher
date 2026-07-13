@@ -11,6 +11,9 @@ interface AppSettings {
   backgroundBlur: number
   backgroundOpacity: number
   customTitle: string
+  aiBaseUrl: string
+  aiApiKey: string
+  aiModel: string
 }
 
 interface ModCard {
@@ -44,6 +47,7 @@ interface Window {
     getRecommendedMods: (version: string) => Promise<ModCard[]>
     searchMods: (query: string, version: string) => Promise<ModCard[]>
     installMod: (mod: { projectId: string; version: string; title: string }) => Promise<{ success: boolean; message: string }>
+    aiChat: (messages: Array<{ role: string; content: string }>) => Promise<{ ok: boolean; text?: string; error?: string; offline?: boolean }>
     pickBackgroundImage: () => Promise<string | null>
     clearBackgroundImage: () => Promise<AppSettings>
     importSettingsCfg: () => Promise<{ success: boolean; message: string; settings?: AppSettings }>

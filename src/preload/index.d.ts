@@ -10,6 +10,9 @@ export interface AppSettings {
   backgroundBlur: number
   backgroundOpacity: number
   customTitle: string
+  aiBaseUrl: string
+  aiApiKey: string
+  aiModel: string
 }
 
 declare global {
@@ -28,6 +31,7 @@ declare global {
       launchGame: (data: { version: string; username: string; loader?: { type: string; version: string } }) => Promise<{ success: boolean; error?: string }>
       searchMods: (query: string, version: string) => Promise<Array<{ projectId: string; version: string; title: string; description: string; downloads: number; iconUrl?: string }>>
       installMod: (mod: { projectId: string; version: string; title: string }) => Promise<{ success: boolean; message: string }>
+      aiChat: (messages: Array<{ role: string; content: string }>) => Promise<{ ok: boolean; text?: string; error?: string; offline?: boolean }>
       pickBackgroundImage: () => Promise<string | null>
       clearBackgroundImage: () => Promise<AppSettings>
       onLaunchStatus: (callback: (status: { type: 'info' | 'progress' | 'error' | 'success'; message: string; progress?: number; speed?: string; eta?: string }) => void) => () => void
